@@ -1,12 +1,13 @@
 #!/usr/bin/python3
 """
-Lazy pagination of user_data table using generators.
+Lazy loading Paginated Data: fetch paginated batches of users lazily.
 """
 import seed
 
+
 def paginate_users(page_size, offset):
     """
-    Fetch a page of users from the database starting at offset.
+    Fetch a single page of users from user_data starting at the given offset.
     Returns a list of dict rows.
     """
     conn = seed.connect_to_prodev()
@@ -23,12 +24,13 @@ def paginate_users(page_size, offset):
 
 def lazy_pagination(page_size):
     """
-    Generator that yields pages of users lazily.
+    Generator that yields pages (lists) of users lazily, fetching only when needed at an offset starting at 0.
     """
     offset = 0
-    while True:  # single loop
+    while True:
         page = paginate_users(page_size, offset)
         if not page:
             break
         yield page
         offset += page_size
+
