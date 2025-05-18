@@ -22,15 +22,16 @@ def paginate_users(page_size, offset):
     return rows
 
 
-def lazy_pagination(page_size):
+def lazypaginate(page_size):
     """
     Generator that yields pages (lists) of users lazily, fetching only when needed at an offset starting at 0.
     """
     offset = 0
-    while True:
+    while True:  # single loop for lazy pagination
         page = paginate_users(page_size, offset)
         if not page:
             break
         yield page
         offset += page_size
+
 
