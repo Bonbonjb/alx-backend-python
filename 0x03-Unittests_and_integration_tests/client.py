@@ -56,3 +56,14 @@ class GithubOrgClient:
         except KeyError:
             return False
         return has_license
+
+    def test_public_repos_url(self):
+        """Test that _public_repos_url returns correct URL from org payload."""
+
+        with patch.object(GithubOrgClient, "org", new_callable=property) as mock_org:
+            mock_org.return_value = {"repos_url": "https://api.github.com/orgs/testorg/repos"}
+
+            client = GithubOrgClient("testorg")
+            result = client._public_repos_url
+
+            self.assertEqual(result, "https://api.github.com/orgs/testorg/repos")
