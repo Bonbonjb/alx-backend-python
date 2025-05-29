@@ -16,6 +16,7 @@ class TestAccessNestedMap(unittest.TestCase):
         ({"a": {"b": 2}}, ("a", "b"), 2),
     ])
     def test_access_nested_map(self, nested_map, path, expected):
+    """Test access_nested_map returns expected result."""
         self.assertEqual(
             access_nested_map(nested_map, path), expected
         )
@@ -25,6 +26,7 @@ class TestAccessNestedMap(unittest.TestCase):
         ({"a": 1}, ("a", "b")),
     ])
     def test_access_nested_map_exception(self, nested_map, path):
+    """Test access_nested_map raises KeyError on bad path."""
         with self.assertRaises(KeyError) as cm:
             access_nested_map(nested_map, path)
         self.assertEqual(str(cm.exception), repr(path[-1]))
@@ -38,11 +40,12 @@ class TestGetJson(unittest.TestCase):
         ("http://holberton.io", {"payload": False}),
     ])
     def test_get_json(self, test_url, test_payload):
+    """Test get_json returns expected JSON payload from URL."""    
         mock_response = Mock()
         mock_response.json.return_value = test_payload
 
-        with patch('utils.requests.get', return_value=mock_response) as mock_get:
-            result = get_json(test_url)
+        with patch('utils.requests.get',
+           return_value=mock_response) as mock_get:
 
             mock_get.assert_called_once_with(
                 test_url
@@ -54,6 +57,7 @@ class TestMemoize(unittest.TestCase):
     """Unit tests for the memoize decorator."""
 
     def test_memoize(self):
+     """Test that memoize caches method result after first call."""    
         class TestClass:
             def a_method(self):
                 return 42
@@ -62,8 +66,9 @@ class TestMemoize(unittest.TestCase):
             def a_property(self):
                 return self.a_method()
 
-        with patch.object(TestClass, 'a_method', return_value=42) as mock_method:
-            obj = TestClass()
+        with patch.object(TestClass, 'a_method',
+                  return_value=42) as mock_method:
+
             result1 = obj.a_property
             result2 = obj.a_property
 
