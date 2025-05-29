@@ -28,11 +28,13 @@ class TestGithubOrgClient(TestCase):
         self.assertEqual(result, expected_payload)
 
     def test_public_repos_url(self):
-        """Test that _public_repos_url returns correct repos URL from org."""
+        """Test GithubOrgClient._public_repos_url returns expected URL."""
         with patch.object(GithubOrgClient, 'org', new_callable=PropertyMock) as mock_org:
             mock_org.return_value = {
                 "repos_url": "https://api.github.com/orgs/testorg/repos"
             }
+
             client = GithubOrgClient("testorg")
             result = client._public_repos_url
+
             self.assertEqual(result, "https://api.github.com/orgs/testorg/repos")
