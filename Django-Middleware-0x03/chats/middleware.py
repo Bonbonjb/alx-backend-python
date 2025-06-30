@@ -4,6 +4,19 @@ import time
 from django.http import JsonResponse
 from django.http import JsonResponse
 
+class RequestLoggingMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        # You can customize this to log what you need
+        method = request.method
+        path = request.get_full_path()
+        print(f"[Request] {method} {path}")  # Or use logging module
+
+        response = self.get_response(request)
+        return response
+
 
 class RestrictAccessByTimeMiddleware:
     """
