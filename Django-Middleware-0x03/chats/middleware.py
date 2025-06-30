@@ -2,6 +2,7 @@ from datetime import datetime
 from django.http import HttpResponseForbidden
 import time
 from django.http import JsonResponse
+from django.http import JsonResponse
 
 
 class RestrictAccessByTimeMiddleware:
@@ -62,3 +63,22 @@ class OffensiveLanguageMiddleware:
         else:
             ip = request.META.get('REMOTE_ADDR')
         return ip
+
+class RolepermissionMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        # Check only specific restricted endpoints, e.g., admin/moderator actions
+        if request.path.startswith('/admin-actions/'):  # Adjust this path as needed
+            user = request.user
+            if not user.is_authenticated:
+                return JsonResponse({"error": "Authentication required"}, status=401)
+
+            # Assuming 'role' is a field on your user model
+            user_role = getattr(user, 'role', None)
+            if user_role not in ['admin', 'moderator']:
+                return JsonResponse({"error": "Permission denied. Admin or moderator required."}, status=403)
+
+        return self.get_response(request)
+
