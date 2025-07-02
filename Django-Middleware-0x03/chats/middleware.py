@@ -1,9 +1,11 @@
 import logging
 from datetime import datetime
+import os
 
 # Set up logging to a file
 logger = logging.getLogger(__name__)
-handler = logging.FileHandler('requests.log')
+log_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'requests.log')
+handler = logging.FileHandler(log_file)
 formatter = logging.Formatter('%(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
