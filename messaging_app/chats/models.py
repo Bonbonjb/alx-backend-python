@@ -2,14 +2,15 @@ import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
-# Extended User model
+# User model
 class User(AbstractUser):
     user_id = models.UUIDField(default=uuid.uuid4, primary_key=True, editable=False)
     email = models.EmailField(unique=True)
     phone_number = models.CharField(max_length=15, blank=True)
+    password = models.CharField(max_length=128)  # <-- explicitly declared
 
     REQUIRED_FIELDS = ["email", "first_name", "last_name", "phone_number"]
-    USERNAME_FIELD = "username"  # default remains
+    USERNAME_FIELD = "username"
 
     def __str__(self):
         return self.username
