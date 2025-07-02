@@ -1,92 +1,139 @@
-import logging
-import time
-from datetime import datetime
-import os
-from django.http import HttpResponseForbidden
-from django.http import JsonResponse
-from collections import defaultdict
-from threading import Lock
+from pathlib import Path
 
-# Set up logging to a file
-logger = logging.getLogger(__name__)
-log_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'requests.log')
-handler = logging.FileHandler(log_file)
-formatter = logging.Formatter('%(message)s')
-handler.setFormatter(formatter)
-logger.addHandler(handler)
-logger.setLevel(logging.INFO)
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
 
-class RequestLoggingMiddleware:
-    def __init__(self, get_response):
-        self.get_response = get_response
 
-    def __call__(self, request):
-        user = request.user if request.user.is_authenticated else "Anonymous"
-        log_entry = f"{datetime.now()} - User: {user} - Path: {request.path}"
-        logger.info(log_entry)
-        return self.get_response(request)
+# Quick-start development settings - unsuitable for production
+# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-class RestrictAccessByTimeMiddleware:
-    def __init__(self, get_response):
-        self.get_response = get_response
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = 'django-insecure-8y8w6li*64(d$+qur0mt6y4@&2_p7jv*hw%o^$vgkvv4ku2y1s'
 
-    def __call__(self, request):
-        current_time = datetime.now().time()
-        restricted_start = time(21, 0)  # 9:00 PM
-        restricted_end = time(18, 0)    # 6:00 PM
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = True
 
-        # Block access if outside allowed window
-        if current_time >= restricted_start or current_time <= restricted_end:
-            return HttpResponseForbidden("Access to the chat is restricted during this time.")
+ALLOWED_HOSTS = []
 
-        return self.get_response(request)
 
-class OffensiveLanguageMiddleware:
-    def __init__(self, get_response):
-        self.get_response = get_response
-        self.ip_log = defaultdict(list)  # {ip: [timestamps]}
-        self.lock = Lock()
+# Application definition
 
-    def __call__(self, request):
-        if request.method == 'POST' and request.path.startswith('/chats/'):
-            ip = self.get_client_ip(request)
-            now = time.time()
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'django_filters',
 
-            with self.lock:
-                timestamps = self.ip_log[ip]
-                # Remove timestamps older than 60 seconds
-                timestamps = [t for t in timestamps if now - t < 60]
-                timestamps.append(now)
-                self.ip_log[ip] = timestamps
+    # Third-party
+    'rest_framework',
 
-                if len(timestamps) > 5:
-                    return JsonResponse({
-                        'error': 'Rate limit exceeded. You can only send 5 messages per minute.'
-                    }, status=429)
+    # Your apps
+    'chats',  
+    'rest_framework_simplejwt',
+]
 
-        return self.get_response(request)
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'chats.middleware.RequestLoggingMiddleware',
+    'chats.middleware.RestrictAccessByTimeMiddleware',
+    'chats.middleware.OffensiveLanguageMiddleware',
+    'chats.middleware.RolepermissionMiddleware',
+]
 
-    def get_client_ip(self, request):
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-        if x_forwarded_for:
-            return x_forwarded_for.split(',')[0]
-        return request.META.get('REMOTE_ADDR')
+ROOT_URLCONF = 'messaging_app.urls'
 
-class RolepermissionMiddleware:
-    def __init__(self, get_response):
-        self.get_response = get_response
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
 
-    def __call__(self, request):
-        restricted_paths = ['/chats/delete/', '/chats/manage/']  # Customize as needed
+WSGI_APPLICATION = 'messaging_app.wsgi.application'
 
-        if request.path in restricted_paths:
-            user = getattr(request, 'user', None)
-            if not user or not user.is_authenticated:
-                return JsonResponse({'error': 'Authentication required.'}, status=403)
 
-            user_role = getattr(user, 'role', None)  # assumes user.role exists
+# Database
+# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-            if user_role not in ['admin', 'moderator']:
-                return JsonResponse({'error': 'Permission denied. Admin or moderator only.'}, status=403)
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 
-        return self.get_response(request)
+
+# Password validation
+# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
+
+
+# Internationalization
+# https://docs.djangoproject.com/en/5.2/topics/i18n/
+
+LANGUAGE_CODE = 'en-us'
+
+TIME_ZONE = 'UTC'
+
+USE_I18N = True
+
+USE_TZ = True
+
+
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/5.2/howto/static-files/
+
+STATIC_URL = 'static/'
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',  
+    'PAGE_SIZE': 20,
+}
+
+AUTH_USER_MODEL = 'chats.User'
