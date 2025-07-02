@@ -71,3 +71,22 @@ class OffensiveLanguageMiddleware:
         if x_forwarded_for:
             return x_forwarded_for.split(',')[0]
         return request.META.get('REMOTE_ADDR')
+
+class RolePermissionMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        restricted_paths = ['/chats/delete/', '/chats/manage/']  # Customize as needed
+
+        if request.path in restricted_paths:
+            user = getattr(request, 'user', None)
+            if not user or not user.is_authenticated:
+                return JsonResponse({'error': 'Authentication required.'}, status=403)
+
+            user_role = getattr(user, 'role', None)  # assumes user.role exists
+
+            if user_role not in ['admin', 'moderator']:
+                return JsonResponse({'error': 'Permission denied. Admin or moderator only.'}, status=403)
+
+        return self.get_response(request)
