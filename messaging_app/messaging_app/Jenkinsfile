@@ -4,7 +4,9 @@ pipeline {
     environment {
         GIT_REPO = 'https://github.com/Bonbonjb/alx-backend-python.git'
         GIT_BRANCH = 'main'
-        PYTHON_VERSION = 'python3'
+        IMAGE_NAME = 'bonbonjb/messaging_app'
+        IMAGE_TAG = 'latest'
+        DOCKER_CREDENTIALS_ID = 'dockerhub-creds'
     }
 
     stages {
@@ -16,7 +18,7 @@ pipeline {
             }
         }
 
-        stage('Setup Python') {
+        stage('Setup Python & Dependencies') {
             steps {
                 sh '''
                 apt-get update && apt-get install -y python3-pip
@@ -41,11 +43,30 @@ pipeline {
                 junit 'messaging_app/report.xml'
             }
         }
+
+        stage('Build Docker Image') {
+            steps {
+                sh '''
+                docker build -t $IMAGE_NAME:$IMAGE_TAG messaging_app
+                '''
+            }
+        }
+
+        stage('Push Docker Image to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS_ID}", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh '''
+                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                    docker push $IMAGE_NAME:$IMAGE_TAG
+                    docker logout
+                    '''
+                }
+            }
+        }
     }
 
     post {
         always {
-            echo 'Cleaning up workspace...'
             cleanWs()
         }
     }
