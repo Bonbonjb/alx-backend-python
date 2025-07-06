@@ -1,0 +1,52 @@
+pipeline {
+    agent any
+
+    environment {
+        GIT_REPO = 'https://github.com/Bonbonjb/alx-backend-python.git'
+        GIT_BRANCH = 'main'
+        PYTHON_VERSION = 'python3'
+    }
+
+    stages {
+        stage('Clone Repository') {
+            steps {
+                git branch: "${env.GIT_BRANCH}",
+                    url: "${env.GIT_REPO}",
+                    credentialsId: 'github-credentials'
+            }
+        }
+
+        stage('Setup Python') {
+            steps {
+                sh '''
+                apt-get update && apt-get install -y python3-pip
+                pip3 install --upgrade pip
+                pip3 install pytest
+                pip3 install -r messaging_app/requirements.txt || true
+                '''
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                sh '''
+                cd messaging_app
+                pytest --junitxml=report.xml
+                '''
+            }
+        }
+
+        stage('Archive Test Report') {
+            steps {
+                junit 'messaging_app/report.xml'
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Cleaning up workspace...'
+            cleanWs()
+        }
+    }
+}
