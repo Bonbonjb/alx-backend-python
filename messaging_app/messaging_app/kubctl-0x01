@@ -1,0 +1,16 @@
+#!/bin/bash
+
+echo "Scaling the Django app to 3 replicas..."
+kubectl scale deployment messaging-app --replicas=3
+
+echo "Waiting for pods to scale..."
+sleep 10
+
+echo "Verifying pods..."
+kubectl get pods -l app=messaging-app
+
+echo "Running load test with wrk..."
+wrk http://localhost:8000 --duration 10s --threads 2 --connections 5
+
+echo "Displaying resource usage..."
+kubectl top pods
