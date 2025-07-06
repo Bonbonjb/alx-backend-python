@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Start Minikube
+echo "Starting Minikube..."
+minikube start
+
+# Wait for Minikube to initialize
+sleep 10
+
+# Check cluster info
+echo "Fetching cluster info..."
+kubectl cluster-info
+
+# Get current pods
+echo "Listing all pods in all namespaces..."
+kubectl get pods --all-namespaces
