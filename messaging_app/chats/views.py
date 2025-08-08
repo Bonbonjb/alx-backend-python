@@ -2,6 +2,7 @@ from rest_framework import filters
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 
 from .models import Conversation, Message
@@ -10,6 +11,8 @@ from .permissions import IsParticipantOfConversation
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import MessageFilter
 from .pagination import MessagePagination
+
+from rest_framework.status import HTTP_403_FORBIDDEN  # ✅ Explicitly added
 
 class ConversationViewSet(viewsets.ModelViewSet):
     serializer_class = ConversationSerializer
@@ -33,15 +36,22 @@ class MessageViewSet(viewsets.ModelViewSet):
         conversation_id = self.kwargs.get("conversation_pk") or self.request.query_params.get("conversation_id")
         conversation = get_object_or_404(Conversation, pk=conversation_id)
 
-        # Check permission
-        self.check_object_permissions(self.request, conversation)
+        try:
+            self.check_object_permissions(self.request, conversation)
+        except PermissionDenied:
+            return Message.objects.none()  # or raise again if you want DRF to return 403 automatically
+
         return Message.objects.filter(conversation=conversation).order_by("sent_at")
 
     def perform_create(self, serializer):
         conversation_id = self.request.data.get("conversation_id")
         conversation = get_object_or_404(Conversation, pk=conversation_id)
 
-        # Check permission
-        self.check_object_permissions(self.request, conversation)
+        try:
+            self.check_object_permissions(self.request, conversation)
+        except PermissionDenied:
+            raise PermissionDenied(detail="You are not allowed to send messages in this conversation.")
 
         serializer.save(sender=self.request.user, conversation=conversation)
+
+
