@@ -1,0 +1,18 @@
+#!/bin/bash
+
+echo "Starting Rolling Update..."
+kubectl apply -f blue_deployment.yaml
+
+echo "Watching rollout status..."
+kubectl rollout status deployment/messaging-blue
+
+echo "Testing live traffic during rollout..."
+
+# Replace with appropriate cluster IP or port-forward command if external access isn't configured
+for i in {1..20}; do
+  curl --silent http://localhost:8000/ || echo "Request failed"
+  sleep 1
+done
+
+echo "Current Pods:"
+kubectl get pods -l app=messaging,version=blue

@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: messaging-blue
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: messaging
+      version: blue
+  template:
+    metadata:
+      labels:
+        app: messaging
+        version: blue
+    spec:
+      containers:
+        - name: django-container
+          image: your-django-image:2.0
+          ports:
+            - containerPort: 8000

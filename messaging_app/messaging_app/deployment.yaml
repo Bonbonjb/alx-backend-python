@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: messaging-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: messaging-app
+  template:
+    metadata:
+      labels:
+        app: messaging-app
+    spec:
+      containers:
+      - name: messaging-app
+        image: messaging-app:latest  # Change if pulling from Docker Hub
+        ports:
+        - containerPort: 8000
+        env:
+        - name: DJANGO_SETTINGS_MODULE
+          value: "messaging_app.settings"
+        # Add other env vars if needed
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: messaging-service
+spec:
+  selector:
+    app: messaging-app
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+  type: ClusterIP

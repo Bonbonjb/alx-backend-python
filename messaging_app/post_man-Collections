@@ -1,0 +1,79 @@
+{
+	"info": {
+		"_postman_id": "742886f0-31b4-49a4-b480-cdedfa888a8e",
+		"name": "messaging_app",
+		"description": "StartFragment\n\n- _API tests for conversations, messages, and JWT auth._\n    \n\nEndFragment",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "46238389",
+		"_collection_link": "https://brenda-4299785.postman.co/workspace/Brenda's-Workspace~6bb7c4db-a16b-4cf2-8ab5-16978c087da8/collection/46238389-742886f0-31b4-49a4-b480-cdedfa888a8e?action=share&source=collection_link&creator=46238389"
+	},
+	"item": [
+		{
+			"name": "Authentication (JWT)",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/token/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"token",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Conversation",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "Send Message",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "Authentication (JWT)",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/token/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"token",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
